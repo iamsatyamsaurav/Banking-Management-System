@@ -1,0 +1,12 @@
+# Generated executables
+/build/
+
+# Runtime and test data (keep only the empty data directory marker)
+/data/*
+!/data/.gitkeep
+
+# Editors and operating-system metadata
+*.swp
+*~
+.DS_Store
+Thumbs.db

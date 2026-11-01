@@ -1,0 +1,44 @@
+digraph BMS {
+  graph [rankdir=TB, bgcolor="white", pad="0.25", nodesep="0.42", ranksep="0.55", splines=ortho, fontname="Arial", label="SATYAM BANK — System Architecture", labelloc=t, fontsize=20];
+  node [shape=box, style="rounded,filled", fillcolor="#F5F8FC", color="#59718C", fontname="Arial", fontsize=10, margin="0.16,0.10"];
+  edge [color="#60758B", arrowsize=0.7, fontname="Arial", fontsize=9];
+
+  subgraph cluster_clients {
+    label="Client process"; color="#B8C7D8"; style="rounded"; fontsize=12;
+    ui [label="Terminal UI\nCustomer • Employee\nManager • Administrator", fillcolor="#E8F2FF"];
+  }
+
+  socket [label="TCP sockets\n127.0.0.1:8080\nnewline-delimited requests", fillcolor="#FFF4D6", color="#C49A36"];
+
+  subgraph cluster_server {
+    label="Server process"; color="#B8C7D8"; style="rounded"; fontsize=12;
+    listener [label="Socket listener\naccept()"];
+    workers [label="Detached pthread per client"];
+    auth [label="Authentication +\nrole authorization\nplain-text demo password"];
+    sessions [label="Active-session table\nBinary POSIX semaphore"];
+    modules [label="Command / business modules\nAccounts • Loans • Feedback\nTransaction history"];
+    listener -> workers -> auth -> modules;
+    auth -> sessions [dir=both, label="reserve / release"];
+  }
+
+  subgraph cluster_storage {
+    label="Text-file storage under data/"; color="#B8C7D8"; style="rounded"; fontsize=12;
+    users [label="users.txt\nrole + demo password
+(fixed-width record)"];
+    accounts [label="app_accounts.txt\nfixed-width records, paise\nOFD record/index locks"];
+    journal [label="app_journal.log\nprepare / commit\nfsync + startup recovery", fillcolor="#E4F6E8", color="#5B9970"];
+    ledger [label="app_transactions.txt\npassbook / history"];
+    ancillary [label="app_loans.txt • app_feedback.txt\ncustomer / employee details"];
+  }
+
+  ui -> socket [dir=both, label="request / response"];
+  socket -> listener [dir=both];
+  auth -> users [dir=both];
+  modules -> accounts [dir=both];
+  modules -> journal [dir=both];
+  modules -> ledger [dir=both];
+  modules -> ancillary [dir=both];
+  recovery [label="Startup recovery runs\nbefore accepting clients", shape=note, fillcolor="#E4F6E8", color="#5B9970"];
+  recovery -> journal [style=dashed, arrowhead=none];
+  recovery -> accounts [style=dashed];
+}
